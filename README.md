@@ -9,3 +9,4 @@ PORT = port bạn tạo
 JWT_SECRET = mã jsonwebtoken của bạn
 
 sau đó chạy: npm run dev
+https://www.youtube.com/watch?v=fH8VIb8exdA&list=PLKhlp2qtUcSZsGkxAdgnPcHioRr-4guZf&index=15&ab_channel=RoadsideCoder
