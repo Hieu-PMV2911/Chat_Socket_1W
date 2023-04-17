@@ -162,16 +162,17 @@ const addToGroup = asyncHandler(async (req, res) => {
   if (!chat) {
     res.status(404);
     throw new Error('Chat Not Found');
+  } else if (!chat.isGroupChat) {
+    res.status(401);
+    throw new Error('This chat is not a group chat');
   } else if (chat.users.includes(userId)) {
     res.status(400);
     throw new Error('User already exists in the group chat');
-  }
-
-
-  if (!chat.groupAdmin.equals(req.user._id)) {
+  } else if (!chat.groupAdmin.equals(req.user._id)) {
     res.status(401);
     throw new Error('You are not authorized to perform this action');
   }
+
   const added = await Chat.findByIdAndUpdate(
     chatId,
     {
