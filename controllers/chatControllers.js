@@ -157,7 +157,11 @@ const addToGroup = asyncHandler(async (req, res) => {
   const { chatId, userId } = req.body;
 
   // check if the requester is admin
-
+  const findId = User.findOne({ userId });
+  if (findId) {
+    res.status(404);
+    throw new Error('User already exists !!!');
+  } else {
   const added = await Chat.findByIdAndUpdate(
     chatId,
     {
@@ -169,12 +173,12 @@ const addToGroup = asyncHandler(async (req, res) => {
   )
     .populate('users', '-password')
     .populate('groupAdmin', '-password');
-
-  if (!added) {
-    res.status(404);
-    throw new Error('Chat Not Found');
-  } else {
-    res.json(added);
+    if (!added) {
+      res.status(404);
+      throw new Error('Chat Not Found');
+    } else {
+      res.json(added);
+    }
   }
 });
 
