@@ -80,8 +80,10 @@ const createGroupChat = asyncHandler(async (req, res) => {
       .status(400)
       .send('More than 2 users are required to form a group chat');
   }
-
-  users.push(req.user);
+  users = users.filter(user => user._id !== req.user._id);
+  if (users.length < 1) {
+    return res.status(400).send({ message: 'At least one other user is required to form a group chat' });
+  }
 
   try {
     const groupChat = await Chat.create({
@@ -156,12 +158,20 @@ const removeFromGroup = asyncHandler(async (req, res) => {
 const addToGroup = asyncHandler(async (req, res) => {
   const { chatId, userId } = req.body;
 
-  // check if the requester is admin
-  const findId = User.findOne({ userId });
-  if (findId) {
+  const chat = await Chat.findOne({ _id: chatId });
+  if (!chat) {
     res.status(404);
-    throw new Error('User already exists !!!');
-  } else {
+    throw new Error('Chat Not Found');
+  } else if (chat.users.includes(userId)) {
+    res.status(400);
+    throw new Error('User already exists in the group chat');
+  }
+
+
+  if (!chat.groupAdmin.equals(req.user._id)) {
+    res.status(401);
+    throw new Error('You are not authorized to perform this action');
+  }
   const added = await Chat.findByIdAndUpdate(
     chatId,
     {
@@ -173,13 +183,8 @@ const addToGroup = asyncHandler(async (req, res) => {
   )
     .populate('users', '-password')
     .populate('groupAdmin', '-password');
-    if (!added) {
-      res.status(404);
-      throw new Error('Chat Not Found');
-    } else {
-      res.json(added);
-    }
-  }
+
+  res.json(added);
 });
 
 module.exports = {
