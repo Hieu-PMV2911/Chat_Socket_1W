@@ -27,7 +27,7 @@ app.use('/api/user', userRouter);
 app.use('/api/chat', chatRouter);
 app.use('/api/message', messRouter);
 
-// connectDB();
+connectDB();
 
 app.use(notFound);
 app.use(errorHandler);

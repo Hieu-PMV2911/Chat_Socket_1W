@@ -1,7 +1,7 @@
 const mongoose = require('mongoose');
 
 function connectDB() {
-  mongoose.connect('mongodb://localhost:27017/ChatApp', {
+  mongoose.connect('mongodb+srv://hieu01672549298:hieu2911@cluster0.wbmda05.mongodb.net/ChatApp1W?retryWrites=true&w=majority', {
     useNewUrlParser: true,
     useUnifiedTopology: true,
   });
