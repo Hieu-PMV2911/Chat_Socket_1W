@@ -1,29 +1,79 @@
 <!DOCTYPE html>
-<html>
-  <head>
-    <title>Socket.IO chat</title>
-    <style>
-      body { margin: 0; padding-bottom: 3rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Document</title>
+	<style>
+		body {
+			margin: 0;
+			padding: 0;
+			display: flex;
+			flex-direction: column;
+			align-items: center;
+			justify-content: center;
+			height: 100vh;
+			font-family: Arial, sans-serif;
+		}
 
-      #form { background: rgba(0, 0, 0, 0.15); padding: 0.25rem; position: fixed; bottom: 0; left: 0; right: 0; display: flex; height: 3rem; box-sizing: border-box; backdrop-filter: blur(10px); }
-      #input { border: none; padding: 0 1rem; flex-grow: 1; border-radius: 2rem; margin: 0.25rem; }
-      #input:focus { outline: none; }
-      #form > button { background: #333; border: none; padding: 0 1rem; margin: 0.25rem; border-radius: 3px; outline: none; color: #fff; }
+		h1 {
+			margin-top: 0;
+		}
 
-      #messages { list-style-type: none; margin: 0; padding: 0; }
-      #messages > li { padding: 0.5rem 1rem; }
-      #messages > li:nth-child(odd) { background: #efefef; }
-    </style>
-  </head>
-  <body>
-    <ul id="messages"></ul>
-    <form id="form" action="">
-      <input id="input" autocomplete="off" /><button>Send</button>
-    </form>
+		form {
+			display: flex;
+			flex-direction: column;
+			align-items: center;
+		}
 
-    <script src="/socket.io/socket.io.js"></script>
+		label {
+			margin-bottom: 0.5rem;
+		}
+
+		input {
+			padding: 0.5rem;
+			border-radius: 0.25rem;
+			border: 1px solid #ccc;
+			margin-bottom: 1rem;
+		}
+
+		input[type="button"] {
+			background-color: #0078d4;
+			color: #fff;
+			border: none;
+			cursor: pointer;
+		}
+
+		input[type="button"]:hover {
+			background-color: #0063ad;
+		}
+	</style>
+</head>
+<body>
+	<h1>Login</h1>
+	<form>
+		<label for="login-btn">Please click the button to login:</label>
+		<input type="button" id="login-btn" onclick="login()" value="LOGIN">
+	</form>
+	<script src="https://alcdn.msauth.net/browser/2.0.0/js/msal-browser.min.js"></script>
+	<script src="https://alcdn.msftauth.net/browser/2.0.0/js/msal-browser.min.js"></script>
 	<script>
-	var socket = io();
+		async function login(){
+			const config = {
+				auth: {
+					clientId: `452c8c8d-50fb-4d53-9579-0f2662eeb1c8`,
+					authority: `https://login.microsoftonline.com/common`,
+					redirectUri: `https://oauth.pstmn.io/v1/browser-callback`
+				}
+			};
+			var client = new msal.PublicClientApplication(config);
+			var request = {
+				scopes: [ 'user.read' ]
+			};
+			const dir = await client.loginPopup(request);
+			console.log(dir);
+		}
 	</script>
-  </body>
+</body>
 </html>

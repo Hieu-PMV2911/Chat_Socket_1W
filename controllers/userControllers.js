@@ -1,6 +1,14 @@
 const asyncHandler = require('express-async-handler');
 const User = require('../models/userModel');
 const generateToken = require('../config/generateToken');
+const AuthenticationContext = require('adal-node').AuthenticationContext;
+const axios = require('axios');
+const jwt = require('jsonwebtoken')
+const qs = require('qs');
+const request = require('request');
+const util = require('util');
+
+
 
 const registerUser = asyncHandler(async (req, res) => {
   const { name, email, password, pic } = req.body;
@@ -72,4 +80,61 @@ const authUser = asyncHandler(async (req, res) => {
   }
 });
 
-module.exports = { allUsers, registerUser, authUser };
+
+const loginAzure = asyncHandler(async (req, res) => {
+  const authorityHostUrl = 'https://login.microsoftonline.com';
+  const tenant = process.env.TENANT_ID;
+  const applicationId = process.env.CLIENT_ID;
+  const authorityUrl = authorityHostUrl + '/' + tenant + '/oauth2/v2.0/token';
+  const clientSecret = process.env.CLIENT_SECRET;
+  const resource = 'https://graph.microsoft.com/.default';
+  const redirectUri = process.env.REDIRECT_URI;
+  const templateAuthzUrl = 'https://login.microsoftonline.com/common/oauth2/authorize?response_type=code&client_id=%s&redirect_uri=%s&state=%s&resource=%s';
+
+  const authzUrl = util.format(templateAuthzUrl, applicationId, redirectUri, '12345', resource);
+  res.redirect(authzUrl);
+
+  const authenticationContext = new AuthenticationContext(authorityUrl);
+  const tokenResponse = await authenticationContext.acquireTokenWithAuthorizationCode(
+    req.query.code,
+    redirectUri,
+    resource, 
+    applicationId,
+    clientSecret
+  );
+
+  const accessToken = tokenResponse.accessToken;
+  console.log(tokenResponse)
+  // res.json(accessToken)
+});
+
+
+const getAllDataAzure = asyncHandler(async (req, res) => {
+  // const token = req.cookies.token;
+  const token = process.env.TOKEN_AZURE;
+
+  const headers = {
+    'Authorization': `Bearer ${token}`,
+    'Content-Type': 'application/json'
+  };
+  
+  const apiUrl = 'https://graph.microsoft.com/v1.0/me';
+  
+  try {
+    const response = await axios.get(apiUrl, { headers });
+    res.json(response.data);
+  } catch (error) {
+    if (error.response && error.response.status === 401) {
+      res.status(401).json({ message: 'Unauthorized' });
+    } else if (error.response && error.response.status === 400) {
+      console.log(error.response.data);
+      res.status(400).json({ message: 'Bad Request', error: error.response.data });
+    } else {
+      console.log(error);
+      res.status(500).json({ message: 'Internal server error' , error});
+    }
+  }
+});
+
+
+module.exports = { allUsers, registerUser, authUser, loginAzure, getAllDataAzure };

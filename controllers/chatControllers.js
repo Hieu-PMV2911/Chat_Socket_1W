@@ -80,9 +80,13 @@ const createGroupChat = asyncHandler(async (req, res) => {
       .status(400)
       .send('More than 2 users are required to form a group chat');
   }
-  users = users.filter(user => user._id !== req.user._id);
+  users = users.filter((user) => user._id !== req.user._id);
   if (users.length < 1) {
-    return res.status(400).send({ message: 'At least one other user is required to form a group chat' });
+    return res
+      .status(400)
+      .send({
+        message: 'At least one other user is required to form a group chat',
+      });
   }
 
   try {

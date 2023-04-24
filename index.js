@@ -1,5 +1,7 @@
 const express = require('express');
 const app = express();
+const bodyParser = require('body-parser');
+const cookieParser = require('cookie-parser');
 const dotenv = require('dotenv');
 // const chats = require('./data/data');
 const connectDB = require('./config/connectDB');
@@ -8,18 +10,24 @@ const chatRouter = require('./routers/chatRouter');
 const messRouter = require('./routers/messRouter');
 const { notFound, errorHandler } = require('./middleware/errorMiddleware');
 app.use(express.json());
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: true }));
 dotenv.config();
 port = process.env.PORT || 8080;
-
+app.use(cookieParser());
 app.get('/', (req, res) => {
   res.sendFile(__dirname + '/index.html');
+});
+
+app.get('/chat', (req, res) => {
+  res.sendFile(__dirname + '/chat.html');
 });
 
 app.use('/api/user', userRouter);
 app.use('/api/chat', chatRouter);
 app.use('/api/message', messRouter);
 
-connectDB();
+// connectDB();
 
 app.use(notFound);
 app.use(errorHandler);
@@ -27,6 +35,7 @@ app.use(errorHandler);
 const server = app.listen(port, () => {
   console.log(`Example app listening on port ${port}`);
 });
+let users = [];
 
 // socket.io
 const io = require('socket.io')(server, {
@@ -37,33 +46,114 @@ const io = require('socket.io')(server, {
 });
 
 io.on('connection', (socket) => {
-  console.log('Connected to socket.io');
-  socket.on('setup', (userData) => {
-    socket.join(userData._id);
-    socket.emit('connected');
+  console.log("user connect: ",socket.id)
+
+  socket.on('chat message', (msg) => {
+    io.emit('chat message', msg);
   });
 
-  socket.on('join_chat', (room) => {
-    socket.join(room);
-    console.log('User Joined Room: ' + room);
-  });
-  socket.on('typing', (room) => socket.in(room).emit('typing'));
-  socket.on('stop_typing', (room) => socket.in(room).emit('stop_typing'));
 
-  socket.on('new_message', (newMessageRecieved) => {
-    var chat = newMessageRecieved.chat;
+  // socket.on('joinUser', (user) => {
+  //   users.push({
+  //     id: user._id,
+  //     socketId: socket.id,
+  //     followers: user.followers,
+  //   });
+  // });
 
-    if (!chat.users) return console.log('chat.users not defined');
+  // socket.on('disconnect', () => {
+  //   const data = users.find((user) => user.socketId === socket.id);
+  //   if (data) {
+  //     const clients = users.filter((user) =>
+  //       data.followers.find((item) => item._id === user.id)
+  //     );
 
-    chat.users.forEach((user) => {
-      if (user._id == newMessageRecieved.sender._id) return;
+  //     if (clients.length > 0) {
+  //       clients.forEach((client) => {
+  //         socket.to(`${client.socketId}`).emit('CheckUserOffline', data.id);
+  //       });
+  //     }
 
-      socket.in(user._id).emit('message_recieved', newMessageRecieved);
-    });
-  });
+  //     if (data.call) {
+  //       const callUser = users.find((user) => user.id === data.call);
+  //       if (callUser) {
+  //         users = EditData(users, callUser.id, null);
+  //         socket.to(`${callUser.socketId}`).emit('callerDisconnect');
+  //       }
+  //     }
+  //   }
 
-  socket.off('setup', () => {
-    console.log('USER DISCONNECTED');
-    socket.leave(userData._id);
-  });
+  //   users = users.filter((user) => user.socketId !== socket.id);
+  // });
+
+  // // Notification
+  // socket.on('createNotify', (msg) => {
+  //   const client = users.find((user) => msg.recipients.includes(user.id));
+  //   client && socket.to(`${client.socketId}`).emit('createNotifyToClient', msg);
+  // });
+
+  // socket.on('removeNotify', (msg) => {
+  //   const client = users.find((user) => msg.recipients.includes(user.id));
+  //   client && socket.to(`${client.socketId}`).emit('removeNotifyToClient', msg);
+  // });
+
+  // // Message
+  // socket.on('addMessage', (msg) => {
+  //   const user = users.find((user) => user.id === msg.recipient);
+  //   user && socket.to(`${user.socketId}`).emit('addMessageToClient', msg);
+  // });
+
+  // // Check User Online / Offline
+  // socket.on('checkUserOnline', (data) => {
+  //   const following = users.filter((user) =>
+  //     data.following.find((item) => item._id === user.id)
+  //   );
+  //   socket.emit('checkUserOnlineToMe', following);
+
+  //   const clients = users.filter((user) =>
+  //     data.followers.find((item) => item._id === user.id)
+  //   );
+
+  //   if (clients.length > 0) {
+  //     clients.forEach((client) => {
+  //       socket
+  //         .to(`${client.socketId}`)
+  //         .emit('checkUserOnlineToClient', data._id);
+  //     });
+  //   }
+  // });
+
+  // // Call User
+  // socket.on('callUser', (data) => {
+  //   users = EditData(users, data.sender, data.recipient);
+
+  //   const client = users.find((user) => user.id === data.recipient);
+
+  //   if (client) {
+  //     if (client.call) {
+  //       socket.emit('userBusy', data);
+  //       users = EditData(users, data.sender, null);
+  //     } else {
+  //       users = EditData(users, data.recipient, data.sender);
+  //       socket.to(`${client.socketId}`).emit('callUserToClient', data);
+  //     }
+  //   }
+  // });
+
+  // socket.on('endCall', (data) => {
+  //   const client = users.find((user) => user.id === data.sender);
+
+  //   if (client) {
+  //     socket.to(`${client.socketId}`).emit('endCallToClient', data);
+  //     users = EditData(users, client.id, null);
+
+  //     if (client.call) {
+  //       const clientCall = users.find((user) => user.id === client.call);
+  //       clientCall &&
+  //         socket.to(`${clientCall.socketId}`).emit('endCallToClient', data);
+
+  //       users = EditData(users, client.call, null);
+  //     }
+  //   }
+  // });
 });
