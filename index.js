@@ -38,19 +38,19 @@ const server = app.listen(port, () => {
 let users = [];
 
 // socket.io
-const io = require('socket.io')(server, {
-  pingTimeout: 60000,
-  cors: {
-    origin: 'http://localhost:3001',
-  },
-});
+// const io = require('socket.io')(server, {
+//   pingTimeout: 60000,
+//   cors: {
+//     origin: 'http://localhost:3001',
+//   },
+// });
 
-io.on('connection', (socket) => {
-  console.log("user connect: ",socket.id)
+// io.on('connection', (socket) => {
+//   console.log("user connect: ",socket.id)
 
-  socket.on('chat message', (msg) => {
-    io.emit('chat message', msg);
-  });
+//   socket.on('chat message', (msg) => {
+//     io.emit('chat message', msg);
+//   });
 
 
   // socket.on('joinUser', (user) => {
@@ -156,4 +156,4 @@ io.on('connection', (socket) => {
   //     }
   //   }
   // });
-});
+// });
