@@ -8,8 +8,6 @@ const qs = require('qs');
 const request = require('request');
 const util = require('util');
 
-
-
 const registerUser = asyncHandler(async (req, res) => {
   const { name, email, password, pic } = req.body;
 
@@ -57,7 +55,13 @@ const allUsers = asyncHandler(async (req, res) => {
       }
     : {};
   const users = await User.find(keyword).find({ _id: { $ne: req.user._id } });
-  res.send(users);
+  res.send({
+    _id: users._id,
+    name: users.name,
+    email: users.email,
+    isAdmin: users.isAdmin,
+    pic: users.pic
+  });
 });
 
 const authUser = asyncHandler(async (req, res) => {
